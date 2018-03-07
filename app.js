@@ -6,7 +6,7 @@ var cache = require('express-redis-cache')();
 
 app.listen(8080);
 
-app.set('views', __dirname + '/views'));
+app.set('views', __dirname + '/views');
 app.set('view engine', 'html');
 
 app.use(express.static(__dirname + '/public'));
