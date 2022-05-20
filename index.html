@@ -11,9 +11,17 @@
         document.querySelector('ol#dynamic-list').appendChild(li);
 
         function formSubmit(formId) {
-            var data = new FormData(document.getElementById(formId));
-            fetch("/pub?id=1", { method: "post", body: data });
-            console.log('Form submitted !');
+            var form = document.getElementById(formId);
+            var data = new FormData(form);
+
+            fetch("pub?id=1", {
+                method: "post",
+                body: data
+            })
+            .then((res) => { return res.text(); })
+            .then((txt) => { console.log(txt); })
+            .catch((err) => { console.log(err); });
+
             return false;
         }
 
@@ -36,7 +44,7 @@
 </head>
 <body>
 <div class="container">
-    <form id="form-publish" onsubmit="formSubmit('form-publish');">
+    <form id="form-publish" onsubmit="formSubmit(this.id);">
         <div class="form-group">
             <label for="message">Message</label>
             <textarea id="message" name="message" class="subscription" rows="3"></textarea>
