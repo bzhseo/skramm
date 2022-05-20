@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Beta Skramm</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="NchanSubscriber.js"></script>
+    <script type="type/javascript">
+        const li = document.createElement('li');
+        li.appendChild(document.createTextNode('Dynamic 2nd item'));
+        document.querySelector('ol#dynamic-list').appendChild(li);
+
+        function formSubmit(formId) {
+            var data = new FormData(document.getElementById(formId));
+            fetch("/pub?id=1", { method: "post", body: data });
+            console.log('Form submitted !');
+            return false;
+        }
+
+        var sub = new NchanSubscriber('https://skramm.net/sub?id=1', {subscriber: ['websocket']});
+
+        sub.start();
+
+        sub.on('message', function(message, message_metadata) {
+            console.log(message);
+            const li = document.createElement('li');
+            li.appendChild(document.createTextNode(message));
+            document.querySelector('ol#dynamic-list').appendChild(li);
+        });
+    </script>
+    <style>
+        .subscription {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <form id="form-publish" onsubmit="formSubmit('form-publish');">
+        <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" class="subscription" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Submit">
+        </div>
+    </form>
+    <div>
+        <p>Dynamic list</p>
+        <ol id="dynamic-list">
+            <li>Static first item</li>
+        </ol>
+    </div>
+</div>
+</body>
+</html>
