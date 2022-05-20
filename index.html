@@ -5,16 +5,27 @@
     <title>Beta Skramm</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="NchanSubscriber.js"></script>
-    <script type="type/javascript">
-        const li = document.createElement('li');
-        li.appendChild(document.createTextNode('Dynamic 2nd item'));
-        document.querySelector('ol#dynamic-list').appendChild(li);
+    <script type="text/javascript">
+        console.log('Test')
 
-        function formSubmit(formId) {
-            var form = document.getElementById(formId);
-            var data = new FormData(form);
+        document.addEventListener("DOMContentLoaded", function() {
 
-            fetch("pub?id=1", {
+            let sub = new NchanSubscriber('https://skramm.net/sub?id=1', {subscriber: ['websocket']});
+
+            sub.on('message', function(message, message_metadata) {
+                console.log(message);
+                let li = document.createElement('li');
+                li.appendChild(document.createTextNode(message));
+                document.querySelector('ol#dynamic-list').appendChild(li);
+            });
+
+            sub.start();
+        });
+
+        function publish() {
+            let data = document.querySelector('textarea#message').value;
+            let channel = document.querySelector('select#channel').value;
+            fetch('pub?id='+channel, {
                 method: "post",
                 body: data
             })
@@ -24,17 +35,6 @@
 
             return false;
         }
-
-        var sub = new NchanSubscriber('https://skramm.net/sub?id=1', {subscriber: ['websocket']});
-
-        sub.start();
-
-        sub.on('message', function(message, message_metadata) {
-            console.log(message);
-            const li = document.createElement('li');
-            li.appendChild(document.createTextNode(message));
-            document.querySelector('ol#dynamic-list').appendChild(li);
-        });
     </script>
     <style>
         .subscription {
@@ -44,19 +44,25 @@
 </head>
 <body>
 <div class="container">
-    <form id="form-publish" onsubmit="formSubmit(this.id);">
-        <div class="form-group">
-            <label for="message">Message</label>
-            <textarea id="message" name="message" class="subscription" rows="3"></textarea>
-        </div>
-        <div class="form-group">
-            <input type="submit" value="Submit">
-        </div>
-    </form>
+    <label for="channel">Select channel</label>
+    <select id="channel" name="channel" onchange="document.querySelector('a#dynamicLink').setAttribute('href', '/pub?id='+this.value)">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+    </select>
+    <a id="dynamicLink" href="/pub?id=1"> > Open channel in new tab</a>
+    <div class="form-group">
+        <label for="message">Write your message</label>
+        <textarea id="message" name="message" class="subscription" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+        <button onclick="publish()">Publish me !</button>
+    </div>
     <div>
         <p>Dynamic list</p>
         <ol id="dynamic-list">
-            <li>Static first item</li>
         </ol>
     </div>
 </div>
