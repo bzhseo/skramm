@@ -13,9 +13,7 @@
     <script type="text/javascript">
         var initSkramm = function(event) {
             document.body.innerHTML = '';
-            let skrammId='3t8jVO';
-            let pathname = new URL(window.location.href).pathname;
-            console.log(pathname);
+            let skrammId = new URL(window.location.href).pathname.substring(1);
             let colorMapping=['cyan','magenta','yellow','cyan','magenta','yellow'];
             let cells='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZ0123456789'.split('');
             let innerWidth=window.innerWidth;
