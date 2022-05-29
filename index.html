@@ -1,70 +1,126 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Beta Skramm</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <style type="text/css">
+        body, html {width:100%;height:100%;margin:0;padding:0}
+        div {position:fixed;background-color:black;text-align:center;}
+        iframe {position:fixed;border:0;background-color:white;}
+    </style>
     <script src="NchanSubscriber.js"></script>
     <script type="text/javascript">
-        console.log('Test')
+        var initSkramm = function(event) {
+            document.body.innerHTML = '';
+            let skrammId='3t8jVO';
+            let pathname = new URL(window.location.href).pathname;
+            console.log(pathname);
+            let colorMapping=['cyan','magenta','yellow','cyan','magenta','yellow'];
+            let cells='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZ0123456789'.split('');
+            let innerWidth=window.innerWidth;
+            let innerHeight=window.innerHeight;
+            let maxWidthHeight=Math.max.apply(Math, [innerWidth,innerHeight]);
+            let cellHeight=Math.floor(maxWidthHeight*0.02);
+            let innerFrameWidth=window.innerWidth-(cellHeight*2);
+            let innerFrameHeight=window.innerHeight-(cellHeight*2);
+            let innerFramePerimeter=(innerFrameWidth+innerFrameHeight)*2;
+            let cellWidth=innerFramePerimeter/cells.length;
+            let topPosition=cellHeight;
+            let leftPosition=innerFrameWidth+cellHeight;
+            let vertically=true;
+            let cellIndex=0;
+            let customCellWidthAdjust=0;
+            let adjustCustomCellWidth=0;
+            let adjustTopPosition=0;
+            let adjustLeftPosition=0;
+            let currentColor='';
+            let posCharacter=-1;
+            for (let cell of cells) {
+                let div = document.createElement('div');
+                //let text = document.createTextNode(cell);
+                //div.appendChild(text);
+                currentColor='black';
+                posCharacter=skrammId.indexOf(cell);
+                if(posCharacter>-1){
+                    currentColor=colorMapping[posCharacter];
+                }
+                let customCellWidth=cellWidth;
+                let customCellHeight=cellHeight;
+                if(topPosition<cellHeight){
+                    if(vertically){
+                        leftPosition=customCellWidthAdjust;
+                        vertically=false;
+                    }else{
+                        leftPosition+=cellWidth;
+                    }
+                }else if(leftPosition<cellHeight){
+                    if(!vertically){
+                        leftPosition=0;
+                        vertically=true;
+                    }
+                    topPosition-=cellWidth;
+                    if(topPosition<cellHeight){
+                        customCellWidth=cellWidth+topPosition;
+                        customCellHeight=cellHeight+cellHeight-topPosition;
+                        customCellWidthAdjust=customCellHeight;
+                        topPosition=0;
+                        leftPosition=0;
+                    }
+                }else if(topPosition+cellWidth>innerFrameHeight+cellHeight){
+                    if(vertically){
+                        topPosition=innerFrameHeight+cellHeight;
+                        vertically=false;
+                    }
+                    leftPosition-=cellWidth;
+                    if(leftPosition<cellHeight){
+                        customCellWidth=cellWidth+leftPosition;
+                        customCellHeight=cellHeight+cellHeight-leftPosition;
+                        topPosition-=(cellHeight-leftPosition);
+                        leftPosition=0;
+                    }
+                }else if(cellIndex){
+                    topPosition+=cellWidth;
+                    if(topPosition+cellWidth>innerFrameHeight+cellHeight){
+                        customCellWidth=innerHeight-topPosition;
+                        customCellHeight=cellHeight+cellHeight-(customCellWidth-cellWidth);
+                        leftPosition=innerWidth-customCellHeight;
+                    }
+                }
+                if(vertically){
+                    adjustCustomCellWidth=customCellWidth+1;
+                    adjustTopPosition=topPosition-1;
+                    div.setAttribute('style','width:'+customCellHeight+'px;height:'+adjustCustomCellWidth+'px;top:'+adjustTopPosition+'px;left:'+leftPosition+'px;background-color:'+currentColor);
+                }else{
+                    adjustCustomCellWidth=customCellWidth+1;
+                    adjustLeftPosition=leftPosition-1;
+                    div.setAttribute('style','width:'+adjustCustomCellWidth+'px;height:'+customCellHeight+'px;top:'+topPosition+'px;left:'+adjustLeftPosition+'px;background-color:'+currentColor);
+                }
+                document.body.appendChild(div);
+                cellIndex++;
+            }
+            
+            let div = document.createElement('div');
+            let text = document.createTextNode('S');
+            div.appendChild(text);
+            div.setAttribute('style','width:'+(cellHeight+1)+'px;height:'+(cellHeight+1)+'px;top:0px;left:'+(innerFrameWidth+cellHeight-1)+'px;background-color:white;font-weight:bold;color:red;line-height:'+(cellHeight+1)+'px;text-align:center;');
+            document.body.appendChild(div);
 
-        document.addEventListener("DOMContentLoaded", function() {
-
-            let sub = new NchanSubscriber('https://skramm.net/sub?id=1', {subscriber: ['websocket']});
-
+            var iframe = document.createElement('iframe');
+            iframe.setAttribute('style','width:'+innerFrameWidth+'px;height:'+innerFrameHeight+'px;top:'+cellHeight+'px;left:'+cellHeight+'px;box-shadow:inset 0px 0px 3px 3px black;');
+            document.body.appendChild(iframe);
+            let sub = new NchanSubscriber('https://skramm.net/sub?id='+skrammId, {subscriber: ['websocket']});
             sub.on('message', function(message, message_metadata) {
                 console.log(message);
-                let li = document.createElement('li');
-                li.appendChild(document.createTextNode(message));
-                document.querySelector('ol#dynamic-list').appendChild(li);
+                iframe.contentWindow.document.open();
+                iframe.contentWindow.document.write('<body>'+message+'</body>');
+                iframe.contentWindow.document.close();
             });
-
             sub.start();
-        });
-
-        function publish() {
-            let data = document.querySelector('textarea#message').value;
-            let channel = document.querySelector('select#channel').value;
-            fetch('pub?id='+channel, {
-                method: "post",
-                body: data
-            })
-            .then((res) => { return res.text(); })
-            .then((txt) => { console.log(txt); })
-            .catch((err) => { console.log(err); });
-
-            return false;
-        }
+        };
+        window.onresize = initSkramm;
+        window.onload = initSkramm;
     </script>
-    <style>
-        .subscription {
-            width: 100%;
-        }
-    </style>
 </head>
-<body>
-<div class="container">
-    <label for="channel">Select channel</label>
-    <select id="channel" name="channel" onchange="document.querySelector('a#dynamicLink').setAttribute('href', '/pub?id='+this.value)">
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-    </select>
-    <a id="dynamicLink" href="/pub?id=1"> > Open channel in new tab</a>
-    <div class="form-group">
-        <label for="message">Write your message</label>
-        <textarea id="message" name="message" class="subscription" rows="3"></textarea>
-    </div>
-    <div class="form-group">
-        <button onclick="publish()">Publish me !</button>
-    </div>
-    <div>
-        <p>Dynamic list</p>
-        <ol id="dynamic-list">
-        </ol>
-    </div>
-</div>
-</body>
+<body></body>
 </html>
