@@ -5,16 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Beta Skramm</title>
     <style type="text/css">
-        body, html {width:100%;height:100%;margin:0;padding:0}
-        div {position:fixed;background-color:black;text-align:center;}
-        iframe {position:fixed;border:0;background-color:white;}
+        body, html{width:100%;height:100%;margin:0;padding:0}
+        div.frame{position:fixed;background-color:black;text-align:center;}
+        iframe{position:fixed;border:0;background-color:white;}
+        a#top-right-corner{display:block;position:fixed;background-color:black;border-bottom-left-radius:90%;box-shadow:0px 0px 3px 3px black;top:0px;}
+        a#top-right-corner div#logo-bottom{position:fixed;background-color:#fbbc05;border-radius:0 0 60% 60%;}
+        a#top-right-corner div#logo-middle{position:fixed;background-color:#ea4335;border-radius:0 60% 0 60%;}
+        a#top-right-corner div#logo-top{position:fixed;background-color:#4285f4;border-radius:60% 60% 0 0;}
     </style>
     <script src="NchanSubscriber.js"></script>
     <script type="text/javascript">
-        var initSkramm = function(event) {
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        let initSkramm = async function(event) {
             document.body.innerHTML = '';
             let skrammId = new URL(window.location.href).pathname.substring(1);
-            let colorMapping=['cyan','magenta','yellow','cyan','magenta','yellow'];
+            let colorMapping=['#4285f4','#ea4335','#fbbc05','#4285f4','#ea4335','#fbbc05'];
             let cells='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZ0123456789'.split('');
             let innerWidth=window.innerWidth;
             let innerHeight=window.innerHeight;
@@ -23,8 +30,8 @@
             let innerFrameWidth=window.innerWidth-(cellHeight*2);
             let innerFrameHeight=window.innerHeight-(cellHeight*2);
             let innerFramePerimeter=(innerFrameWidth+innerFrameHeight)*2;
-            let cellWidth=innerFramePerimeter/cells.length;
-            let topPosition=cellHeight;
+            let cellWidth=innerFramePerimeter/(cells.length+2);
+            let topPosition=cellHeight+cellWidth;
             let leftPosition=innerFrameWidth+cellHeight;
             let vertically=true;
             let cellIndex=0;
@@ -94,19 +101,44 @@
                     adjustLeftPosition=leftPosition-1;
                     div.setAttribute('style','width:'+adjustCustomCellWidth+'px;height:'+customCellHeight+'px;top:'+topPosition+'px;left:'+adjustLeftPosition+'px;background-color:'+currentColor);
                 }
+                div.setAttribute('class','frame');
                 document.body.appendChild(div);
                 cellIndex++;
             }
-            
-            let div = document.createElement('div');
-            let text = document.createTextNode('S');
-            div.appendChild(text);
-            div.setAttribute('style','width:'+(cellHeight+1)+'px;height:'+(cellHeight+1)+'px;top:0px;left:'+(innerFrameWidth+cellHeight-1)+'px;background-color:white;font-weight:bold;color:red;line-height:'+(cellHeight+1)+'px;text-align:center;');
-            document.body.appendChild(div);
 
-            var iframe = document.createElement('iframe');
+            let iframe=document.createElement('iframe');
             iframe.setAttribute('style','width:'+innerFrameWidth+'px;height:'+innerFrameHeight+'px;top:'+cellHeight+'px;left:'+cellHeight+'px;box-shadow:inset 0px 0px 3px 3px black;');
             document.body.appendChild(iframe);
+
+            let a=document.createElement('a');
+            a.setAttribute('style','width:'+(cellWidth+cellHeight+1)+'px;height:'+(cellWidth+cellHeight+1)+'px;left:'+(innerFrameWidth+cellHeight-cellWidth-1)+'px;');
+            a.setAttribute('id','top-right-corner');
+            a.setAttribute('href','#');
+            a.setAttribute('onclick','return false;');
+            let logoWidth=Math.floor((cellWidth+cellHeight)/2);
+            let logoHeight=Math.floor(logoWidth/3);
+            let logoMargin=Math.floor(cellHeight/2);
+            let divBottom=document.createElement('div');
+            divBottom.setAttribute('style','width:'+logoWidth+'px;height:'+logoHeight+'px;top:'+logoMargin+'px;right:'+logoMargin+'px;');
+            divBottom.setAttribute('id','logo-bottom');
+            a.appendChild(divBottom);
+            let divMiddle=document.createElement('div');
+            divMiddle.setAttribute('style','width:'+logoWidth+'px;height:'+logoHeight+'px;top:'+(logoMargin+logoHeight)+'px;right:'+logoMargin+'px;');
+            divMiddle.setAttribute('id','logo-middle');
+            a.appendChild(divMiddle);
+            let divTop=document.createElement('div');
+            divTop.setAttribute('style','width:'+logoWidth+'px;height:'+logoHeight+'px;top:'+(logoMargin+logoHeight+logoHeight)+'px;right:'+logoMargin+'px;');
+            divTop.setAttribute('id','logo-top');
+            a.appendChild(divTop);
+            document.body.appendChild(a);
+            let revertPos=logoMargin+logoHeight+logoHeight;
+            for(let pos=logoMargin;pos<(logoMargin+logoHeight+logoHeight);pos++) {
+                revertPos--;
+                divBottom.setAttribute('style','width:'+logoWidth+'px;height:'+logoHeight+'px;top:'+pos+'px;right:'+logoMargin+'px;');
+                divTop.setAttribute('style','width:'+logoWidth+'px;height:'+logoHeight+'px;top:'+revertPos+'px;right:'+logoMargin+'px;');
+                await sleep(50);
+            }
+
             let sub = new NchanSubscriber('https://skramm.net/sub?id='+skrammId, {subscriber: ['websocket']});
             sub.on('message', function(message, message_metadata) {
                 console.log(message);
